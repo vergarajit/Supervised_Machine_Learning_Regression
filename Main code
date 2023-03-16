@@ -52,5 +52,7 @@ sns.boxplot(x=new_data['cogs'])
 gross_income_scatter = new_data.plot.scatter(x='cogs',
                       y='gross_income')
                       
-                      
+# check z-score
 
+new_data['cogs_Stats'] = stats.zscore(new_data['cogs'])
+new_data[['cogs','cogs_Stats']].describe().round(3)
