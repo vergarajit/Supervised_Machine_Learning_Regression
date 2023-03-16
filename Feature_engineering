@@ -1,0 +1,38 @@
+# convert categorical values to numerical using label encoding
+
+new_data['Branch'].unique().tolist()
+new_data.replace({"A":0,"C":1,"B":2},inplace=True)
+
+new_data['Customer type'].unique().tolist()
+new_data.replace({"Member":0,"Normal":1},inplace=True)
+
+new_data['Gender'].unique().tolist()
+new_data.replace({"Female":0,"Male":1},inplace=True)
+
+new_data['Product line'].unique().tolist()
+new_data.replace({'Health and beauty':0,
+ 'Electronic accessories':1,
+ 'Home and lifestyle':2,
+ 'Sports and travel':3,
+ 'Food and beverages':4,
+ 'Fashion accessories':5},inplace=True)
+ 
+new_data['Payment'].unique().tolist()
+new_data.replace({"Ewallet":0,"Cash":1,"Credit card":2},inplace=True)
+
+# *** Feature transformation ***
+new_data['Month']= pd.to_datetime(new_data["Date"], format="%m/%d/%Y").dt.month
+new_data['Day'] = pd.to_datetime(new_data['Date'], format="%m/%d/%Y").dt.day
+new_data['Year'] = pd.to_datetime(new_data['Date'], format="%m/%d/%Y").dt.year
+
+new_data["Hour"]= pd.to_datetime(new_data['Time']).dt.hour
+new_data["Min"]= pd.to_datetime(new_data['Time']).dt.minute
+
+# define the columns to work with
+
+model_data = new_data.loc[:,['Unit price', 'Quantity', 'Tax 5%', 'Total',
+                        'cogs', 'gross_income', 'Rating']]
+                        
+                        
+
+
