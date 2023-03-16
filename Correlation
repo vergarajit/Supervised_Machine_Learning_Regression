@@ -1,0 +1,70 @@
+#correlation
+features_cols= model_data.columns[:-2]
+
+# Calculate the correlation values
+corr_values = model_data[features_cols].corr()
+corr_values
+
+# Simplify by emptying all the data below the diagonal
+tril_index = np.tril_indices_from(corr_values)
+
+# Make the unused values NaNs
+corr_array = np.array(corr_values)
+corr_array[np.tril_indices_from(corr_values)]= np.nan
+
+#for coord in zip(*tril_index):
+ #   corr_values.iloc[coord[0], coord[1]] = np.NaN
+# Stack the data and convert to a data frame
+corr_values = (corr_values
+               .stack()
+               .to_frame()
+               .reset_index()
+               .rename(columns={'level_0':'feature1',
+                                'level_1':'feature2',
+                                0:'correlation'}))
+# Get the absolute values for sorting
+
+
+corr_values['absolute_corr'] = corr_values.correlation.abs()
+corr_values
+
+# plotting the correlation
+sns.set_context('talk')
+sns.set_style('white')
+
+ax = corr_values.absolute_corr.hist(bins=50, figsize=(12, 8))
+ax.set(xlabel='Absolute Correlation', ylabel='Frequency');
+
+# The most highly correlated values
+corr_values.sort_values('correlation', ascending=False).query('absolute_corr<0.8')
+
+gross = model_data.select_dtypes(include = ['float64', 'int64'])
+gross_corr = gross.corr()['gross_income'][:-2] 
+top_features = gross_corr[abs(gross_corr) > 0.4].sort_values(ascending=False) #displays pearsons correlation coefficient greater than 0.5
+print("There is {} strongly correlated values with Gross income:\n{}".format(len(top_features), top_features))
+
+*** Data normalization/standarization ***
+
+#Chech if y is normaly distributed
+new_data.gross_income.hist();
+
+normaltest(new_data.gross_income.values) 
+#Pi-value too low
+
+# log transformation improve a bit but stil not normal
+log_y = np.sqrt(y)
+log_y.hist();
+normaltest(log_y)
+
+# use normalization and standarization to adjust the data distribution 
+norm_data = MinMaxScaler().fit_transform(gross)
+norm = pd.DataFrame(norm_data)
+norm
+
+scaled_data = StandardScaler().fit_transform(gross)
+
+scaled = pd.DataFrame(scaled_data)
+scaled.head()
+scaled[6].hist();
+
+
