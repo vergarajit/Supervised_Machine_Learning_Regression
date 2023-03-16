@@ -67,4 +67,16 @@ scaled = pd.DataFrame(scaled_data)
 scaled.head()
 scaled[6].hist();
 
+# Box-Cox transformation 
+
+bc_result = boxcox(model_data.gross_income)
+boxcox_gross = bc_result[0]
+lam = bc_result[1]
+
+model_data['gross_income'].hist();
+plt.hist(boxcox_gross);
+
+normaltest(boxcox_gross) 
+#Still not normal
+
 
