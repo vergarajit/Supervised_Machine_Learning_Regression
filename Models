@@ -1,0 +1,127 @@
+# base modellinear regression model
+lm = LinearRegression()
+
+lm = LinearRegression()
+X = model_data.drop('gross_income', axis=1)
+y = model_data.gross_income
+
+#Train test split 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, 
+                                                    random_state=42)
+#Fit StandardScaler on X_train 
+#s = StandardScaler()
+#X_train_s = s.fit_transform(X_train)
+
+lm.fit(X_train, y_train)
+y_pred = lm.predict(X_test)
+
+#R2 score
+print("R^2 on training  data ",lm.score(X_train, y_train))
+print("R^2 on testing data ",lm.score(X_test,y_test))
+
+#Model with polynomial transformation 
+poly_features = PolynomialFeatures(degree=2, include_bias=False)
+
+X_train_poly = poly_features.fit_transform(X_train)
+X_test_poly = poly_features.transform(X_test)
+
+lm.fit(X_train_poly, y_train)
+
+predicted = lm.predict(X_train_poly)
+
+print("R^2 on training data:", lm.score(X_train_poly, y_train))
+print("R^2 on testing data:", lm.score(X_test_poly,y_test))
+
+def rmse(ytrue, ypredicted):
+    return np.sqrt(mean_squared_error(ytrue, ypredicted))
+    
+lm_rmse = rmse(y_test, y_pred)
+
+print(lm_rmse)
+
+def  plot_dis(y,yhat):
+    
+    plt.figure()
+    ax1 = sns.distplot(y, hist=False, color="r", label="Actual Value")
+    sns.distplot(yhat, hist=False, color="b", label="Fitted Values" , ax=ax1)
+    plt.legend()
+
+    plt.title('Actual vs Fitted Values')
+    plt.xlabel('Gross income')
+    plt.ylabel('Proportion of Customers')
+
+    plt.show()
+    plt.close()
+    
+plot_dis(y_test,y_pred)
+
+#Lasso model
+alphas2 = np.array([0.005, 0.05, 0.1, 1, 5, 20, 50, 80, 120, 140])
+
+lassoCV = LassoCV(alphas=alphas2,
+                  max_iter=1000,
+                  cv=3).fit(X_train, y_train)
+
+lassoCV_rmse = rmse(y_test, lassoCV.predict(X_test))
+
+print(lassoCV.alpha_, lassoCV_rmse)  # Lasso is slower try cv=4
+
+print('Of {} coefficients, {} are non-zero with Lasso.'.format(len(lassoCV.coef_), 
+                                                               len(lassoCV.coef_.nonzero()[0])))
+                                                               
+ #Ridge model
+from sklearn.linear_model import RidgeCV
+
+alphas = [0.05, 0.3, 3, 5, 10, 15, 30, 80]
+
+ridgeCV = RidgeCV(alphas=alphas, 
+                  cv=3).fit(X_train, y_train)
+
+ridgeCV_rmse = rmse(y_test, ridgeCV.predict(X_test))
+
+print(ridgeCV.alpha_, ridgeCV_rmse)
+
+
+#Elasticnet model 
+from sklearn.linear_model import ElasticNetCV
+
+l1_ratios = np.linspace(0.1, 0.9, 9)
+
+elasticNetCV = ElasticNetCV(alphas=alphas2, 
+                            l1_ratio=l1_ratios,
+                            max_iter=1000).fit(X_train, y_train)
+elasticNetCV_rmse = rmse(y_test, elasticNetCV.predict(X_test))
+
+print(elasticNetCV.alpha_, elasticNetCV.l1_ratio_, elasticNetCV_rmse)
+
+rmse_vals = [lm_rmse, ridgeCV_rmse, lassoCV_rmse, elasticNetCV_rmse]
+
+labels = ['Linear', 'Ridge', 'Lasso', 'ElasticNet']
+
+rmse_df = pd.Series(rmse_vals, index=labels).to_frame()
+rmse_df.rename(columns={0: 'RMSE'}, inplace=1)
+rmse_df
+
+# pipeline using ridge, polynomial features and standardscaler
+
+Input=[ ('polynomial', PolynomialFeatures(include_bias=False,degree=2)),('ss',StandardScaler() ), ('model',Ridge(alpha=1))]
+pipe = Pipeline(Input)
+
+alphas = [0.01,1,10]
+R_2=[]
+coefs = []
+for alpha in alphas:
+    ridge = Ridge(alpha=alpha)
+    ridge.fit(X_train, y_train)
+    coefs.append(abs(ridge.coef_))
+    R_2.append(ridge.score(X_test,y_test))
+    
+pipe.fit(X_train, y_train)
+
+predicted=pipe.predict(X_test)
+pipe.score(X_test, y_test)
+
+pipe_rmse = rmse(y_test, predicted)
+
+print(lm_rmse)
+
